@@ -11,52 +11,130 @@
             overflow-x: hidden; /* Hide horizontal scroll */
         }
 
+        .gateway {
+            text-align: center;
+            padding-top: 20vh;
+            color: white;
+            perspective: 500px; /* Required for 3D effects */
+        }
+
+        .door {
+            margin: 20px auto;
+            position: relative;
+            width: 200px;
+            height: 300px;
+            background: gold;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .door-left, .door-right {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: #fff7;
+            transition: transform 1s;
+            transform-style: preserve-3d; /* Enable 3D transformations */
+        }
+
+        .door-left {
+            border-right: 2px solid #fff;
+            left: 0;
+            transform-origin: left;
+        }
+
+        .door-right {
+            right: 0;
+            transform-origin: right;
+        }
+
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(6, 1fr); /* Adapting from Code 3 for a 6-column grid */
+            gap: 10px;
             padding: 20px;
-            perspective: 1000px; /* Required for 3D effects */
         }
 
         .box {
             background: #fff;
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 20px;
             transition: transform 0.5s;
-            transform-style: preserve-3d; /* Enable 3D transformations */
             cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            transform-style: preserve-3d; /* Enable 3D transformations */
         }
 
         .box:hover {
-            transform: scale(1.1) rotateX(15deg) rotateY(15deg); /* 3D expand effect on hover */
+            transform: scale(1.05) rotateX(15deg) rotateY(15deg); /* Combined 3D effect on hover */
         }
 
-        .box h3, .box p {
+        /* Different box sizes, adapting from Code 3 */
+        .box.large { grid-column: span 3; grid-row: span 2; }
+        .box.medium { grid-column: span 2; grid-row: span 2; }
+        .box.small { grid-column: span 2; grid-row: span 1; }
+
+        .box h3 {
             margin: 0;
-            padding: 10px 0;
-            text-align: center;
+            font-size: 1.2em;
             color: #333;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="box">
-        <h3>Vishal Sharai</h3>
-        <p>A visionary in digital art, transforming imagination into breathtaking visuals.</p>
+<div class="gateway">
+    <h1>Welcome to Heaven</h1>
+    <h2>Vishal Sharai & Vishal Pawar</h2>
+    <div class="door" id="door">
+        <div class="door-left"></div>
+        <div class="door-right"></div>
     </div>
-    <div class="box">
+</div>
+
+<div class="container">
+    <!-- Adapting box sizes and content from Code 2 and Code 3 -->
+    <div class="box large">
+        <h3>Creative Haven</h3>
+        <p>Where creativity and innovation flourish.</p>
+    </div>
+    <div class="box medium">
+        <h3>Heaven's Gate</h3>
+        <p>The entry to a world of endless possibilities.</p>
+    </div>
+    <div class="box small">
+        <h3>Puzzle Piece 1</h3>
+        <p>Every piece is part of a larger picture.</p>
+    </div>
+    <div class="box small">
+        <h3>Puzzle Piece 2</h3>
+        <p>Discovering the beauty in every detail.</p>
+    </div>
+    <div class="box medium">
         <h3>Vishal Pawar</h3>
         <p>An adept coder, crafting seamless experiences across digital landscapes.</p>
     </div>
-    <div class="box">
-        <h3>Heaven's Gate</h3>
-        <p>Where creativity meets infinity, unlocking the doors to digital paradise.</p>
+    <div class="box large">
+        <h3>Vishal Sharai</h3>
+        <p>A visionary in digital art, transforming imagination into breathtaking visuals.</p>
     </div>
-    <!-- Add more boxes as needed -->
+    <!-- Add more boxes as needed, adjusting classes for size -->
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const door = document.getElementById('door');
+        door.addEventListener('click', function() {
+            document.querySelector('.door-left').style.transform = 'rotateY(-120deg)';
+            document.querySelector('.door-right').style.transform = 'rotateY(120deg)';
+        });
+    });
+</script>
 
 </body>
 </html>
