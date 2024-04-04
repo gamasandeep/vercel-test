@@ -1,17 +1,70 @@
-<html lang="en">
-  <body>
-
-<!-- Chatbot Code -->
-    <div id="root"></div>
-    <script src="https://unpkg.com/react/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
-    <script
-      type="text/javascript"
-      id="gutenbergChatWidget"
-      src="https://cdn.jsdelivr.net/gh/GutenbergCommunications/chatbot-widget@prod/chatbot.bundle.js"
-      botType="qnaBot"
-      chatbotId=edffa7cb-b9d3-4f47-baa9-66a43b6b20f6
-    ></script>  </body>
-</html>
-
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Heaven</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+        }
+
+        .gateway {
+            text-align: center;
+            padding-top: 20vh;
+            color: white;
+        }
+
+        .door {
+            margin: 20px auto;
+            position: relative;
+            width: 200px;
+            height: 300px;
+            background: gold;
+            border: 3px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .door-left, .door-right {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            background: #fff7;
+            transition: transform 1s;
+        }
+
+        .door-left {
+            border-right: 2px solid #fff;
+            left: 0;
+            transform-origin: left;
+        }
+
+        .door-right {
+            right: 0;
+            transform-origin: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="gateway">
+        <h1>Welcome to Heaven</h1>
+        <h2>Vishal Sharai & Vishal Pawar</h2>
+        <div class="door" id="door">
+            <div class="door-left"></div>
+            <div class="door-right"></div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const door = document.getElementById('door');
+            door.addEventListener('click', function() {
+                document.querySelector('.door-left').style.transform = 'rotateY(-120deg)';
+                document.querySelector('.door-right').style.transform = 'rotateY(120deg)';
+            });
+        });
+    </script>
+</body>
+</html>
