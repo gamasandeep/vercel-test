@@ -52,9 +52,10 @@
 
         .container {
             display: grid;
-            grid-template-columns: repeat(6, 1fr); /* Adapting from Code 3 for a 6-column grid */
-            gap: 10px;
+            grid-template-columns: repeat(6, 1fr); /* 6-column grid */
+            gap: 20px; /* Gap between the boxes */
             padding: 20px;
+            align-items: start; /* Align items at the start of each grid cell */
         }
 
         .box {
@@ -64,8 +65,9 @@
             transition: transform 0.5s;
             cursor: pointer;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column; /* Stack children vertically */
+            align-items: center; /* Center children horizontally */
+            justify-content: center; /* Center children vertically */
             text-align: center;
             transform-style: preserve-3d; /* Enable 3D transformations */
         }
@@ -74,15 +76,10 @@
             transform: scale(1.05) rotateX(15deg) rotateY(15deg); /* Combined 3D effect on hover */
         }
 
-        /* Different box sizes, adapting from Code 3 */
-        .box.large { grid-column: span 3; grid-row: span 2; }
-        .box.medium { grid-column: span 2; grid-row: span 2; }
-        .box.small { grid-column: span 2; grid-row: span 1; }
+        .box.large { grid-column: span 3; } /* Large boxes span 3 columns */
 
-        .box h3 {
-            margin: 0;
-            font-size: 1.2em;
-            color: #333;
+        .box h1, .box p {
+            margin: 10px 0; /* Add margin for spacing */
         }
     </style>
 </head>
@@ -98,19 +95,16 @@
 </div>
 
 <div class="container">
-    <!-- Adapting box sizes and content from Code 2 and Code 3 -->
     <div class="box large">
-        <center><h1>Creative Haven</h1></center>
-        <br>
-        <p><center>Where creativity and innovation flourish.</center></p>
-    </div>
+        <h1>Creative Haven</h1>
+        <p>Where creativity and innovation flourish.</p>
     </div>
     <div class="box large">
-        <center><h1>Vishal Sharai</h1></center><br>
+        <h1>Vishal Sharai</h1>
         <p>An adept coder, crafting seamless experiences across digital landscapes.</p>
     </div>
     <div class="box large">
-        <center><h1>Vishal Pawar</h1></center><br>
+        <h1>Vishal Pawar</h1>
         <p>A visionary in digital art, transforming imagination into breathtaking visuals.</p>
     </div>
     <!-- Add more boxes as needed, adjusting classes for size -->
