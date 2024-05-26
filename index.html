@@ -1,22 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>
-!function(w, d, s, ...args){
-  var div = d.createElement('div');
-  div.id = 'aichatbot';
-  d.body.appendChild(div);
-  w.chatbotConfig = args;
-  var f = d.getElementsByTagName(s)[0],
-  j = d.createElement(s);
-  j.defer = true;
-  j.type = 'module';
-  j.src = 'https://aichatbot.sendbird.com/index.js';
-  f.parentNode.insertBefore(j, f);
-}(window, document, 'script', '3B6D3EE9-078B-4199-B9FE-ED8F76F52407', 'onboarding_bot', {
-  apiHost: 'https://api-cf-ap-8.sendbird.com',
-});
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+</head>
+<body>
+    <!-- This is where your chatbot will appear in the page -->
+    <div id="aichatbot"></div>
 
+    <!-- JavaScript to load the AI chatbot -->
+    <script>
+        !function(w, d, s, ...args){
+            var div = d.createElement('div');
+            div.id = 'aichatbot';
+            d.body.appendChild(div);
+            w.chatbotConfig = args;
+            var f = d.getElementsByTagName(s)[0],
+            j = d.createElement(s);
+            j.defer = true;
+            j.type = 'module';
+            j.src = 'https://aichatbot.sendbird.com/index.js';
+            f.parentNode.insertBefore(j, f);
+        }(window, document, 'script', '3B6D3EE9-078B-4199-B9FE-ED8F76F52407', 'onboarding_bot', {
+            apiHost: 'https://api-cf-ap-8.sendbird.com',
+        });
+    </script>
 </body>
 </html>
