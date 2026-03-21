@@ -6,25 +6,6 @@
     <title>AI Chatbot</title>
 </head>
 <body>
-    <!-- This is where your chatbot will appear in the page -->
-    <div id="aichatbot"></div>
-
-    <!-- JavaScript to load the AI chatbot -->
-    <script>
-        !function(w, d, s, ...args){
-            var div = d.createElement('div');
-            div.id = 'aichatbot';
-            d.body.appendChild(div);
-            w.chatbotConfig = args;
-            var f = d.getElementsByTagName(s)[0],
-            j = d.createElement(s);
-            j.defer = true;
-            j.type = 'module';
-            j.src = 'https://aichatbot.sendbird.com/index.js';
-            f.parentNode.insertBefore(j, f);
-        }(window, document, 'script', '3B6D3EE9-078B-4199-B9FE-ED8F76F52407', 'onboarding_bot', {
-            apiHost: 'https://api-cf-ap-8.sendbird.com',
-        });
-    </script>
+<script src='https://www.noupe.com/embed/019d0fa388cf7dae8648098c6cd22bf1b2a0.js'></script>
 </body>
 </html>
