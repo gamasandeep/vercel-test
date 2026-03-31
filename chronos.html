@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHRONOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM PROPERTIES — oklch() color space
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg: #050507;
+  --bg-elevated: #0a0a0f;
+  --surface: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text-primary: #f0efe9;
+  --text-secondary: rgba(240,239,233,0.5);
+  --text-tertiary: rgba(240,239,233,0.25);
+  --accent: #c8ff00;
+  --accent-glow: rgba(200,255,0,0.15);
+  --accent-2: #00e5ff;
+  --accent-3: #ff3d71;
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-highlight: rgba(255,255,255,0.12);
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 32px;
+  --radius-xl: 48px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESET
+   ═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  cursor: none;
+}
+a { text-decoration: none; color: inherit; }
+button { border: none; background: none; cursor: none; font-family: inherit; }
+
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM CURSOR
+   ═══════════════════════════════════════════════════════════ */
+.cursor {
+  position: fixed;
+  top: 0; left: 0;
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--text-primary);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transition: width 0.4s var(--ease), height 0.4s var(--ease), border-color 0.3s, background 0.3s;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: difference;
+}
+.cursor.hovering {
+  width: 60px; height: 60px;
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+.cursor-dot {
+  position: fixed;
+  top: 0; left: 0;
+  width: 5px; height: 5px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10001;
+  transform: translate(-50%, -50%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLL PROGRESS — CSS scroll-driven animation (2026)
+   ═══════════════════════════════════════════════════════════ */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 100%;
+  z-index: 9999;
+  background: transparent;
+  & .bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3));
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: progressFill linear;
+    animation-timeline: scroll();
+  }
+}
+@keyframes progressFill { to { transform: scaleX(1); } }
+
+/* ═══════════════════════════════════════════════════════════
+   CANVAS (particle bg)
+   ═══════════════════════════════════════════════════════════ */
+#particleCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GRAIN OVERLAY
+   ═══════════════════════════════════════════════════════════ */
+.grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%; height: 200%;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grainShift 0.5s steps(4) infinite;
+}
+@keyframes grainShift {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(-5%,-5%); }
+  50% { transform: translate(5%,0); }
+  75% { transform: translate(0,5%); }
+  100% { transform: translate(-5%,5%); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOADING
+   ═══════════════════════════════════════════════════════════ */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+.loader.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+.loader-counter {
+  font-family: 'DM Mono', monospace;
+  font-size: clamp(4rem, 10vw, 8rem);
+  font-weight: 300;
+  color: var(--text-primary);
+  letter-spacing: -0.04em;
+}
+.loader-line {
+  width: 200px; height: 1px;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+}
+.loader-line-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 1px;
+  transition: width 0.1s linear;
+}
+.loader-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAVIGATION — Liquid Glass
+   ═══════════════════════════════════════════════════════════ */
+.nav {
+  position: fixed;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(60px) saturate(1.8);
+  -webkit-backdrop-filter: blur(60px) saturate(1.8);
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  box-shadow:
+    0 0 0 0.5px rgba(255,255,255,0.05) inset,
+    0 20px 50px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: transform 1s var(--ease), opacity 1s var(--ease);
+}
+.nav.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.nav a {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 0.55rem 1.2rem;
+  border-radius: 100px;
+  transition: all 0.5s var(--ease);
+  &:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+  &.active { color: var(--bg); background: var(--accent); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════════════════════ */
+.display-xxl {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(4rem, 13vw, 14rem);
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+}
+.display-xl {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2.5rem, 7vw, 7rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+.serif-lg {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.8rem, 4vw, 3.5rem);
+  font-weight: 400;
+  line-height: 1.2;
+  font-style: italic;
+}
+.mono-sm {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+.body-lg {
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  font-weight: 200;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 520px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLL-DRIVEN REVEAL (CSS 2026)
+   ═══════════════════════════════════════════════════════════ */
+.reveal {
+  animation: revealUp linear both;
+  animation-timeline: view();
+  animation-range: entry 5% entry 35%;
+}
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(80px); filter: blur(10px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.reveal-scale {
+  animation: revealScale linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 40%;
+}
+@keyframes revealScale {
+  from { opacity: 0; transform: scale(0.85); filter: blur(12px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+.reveal-words span {
+  display: inline-block;
+  animation: revealWord linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 50%;
+}
+@keyframes revealWord {
+  from { opacity: 0; transform: translateY(40px) rotateX(40deg); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0) rotateX(0); filter: blur(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION 1 — THE VOID (Hero)
+   ═══════════════════════════════════════════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  z-index: 1;
+  overflow: hidden;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(30px);
+  margin-bottom: 3rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 1s var(--ease);
+}
+.hero-badge.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hero-badge .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: badgePulse 2s ease infinite;
+}
+@keyframes badgePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(200,255,0,0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(200,255,0,0); }
+}
+.hero-badge span {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.hero-title {
+  text-align: center;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.hero-title .line {
+  display: block;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: all 1.2s var(--ease);
+}
+.hero-title .line.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hero-title .line:nth-child(2) { transition-delay: 0.15s; }
+.hero-title .accent-text {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub {
+  text-align: center;
+  max-width: 480px;
+  margin-bottom: 3.5rem;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 1.2s var(--ease) 0.4s;
+}
+.hero-sub.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.hero-actions {
+  display: flex;
+  gap: 1rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 1s var(--ease) 0.6s;
+}
+.hero-actions.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 1.1rem 2.5rem;
+  border-radius: 100px;
+  transition: all 0.5s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.btn-fill {
+  color: var(--bg);
+  background: var(--accent);
+  box-shadow: 0 0 30px rgba(200,255,0,0.2);
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 50px rgba(200,255,0,0.35);
+  }
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.8s var(--ease);
+  }
+  &:hover::before { transform: translateX(100%); }
+}
+.btn-outline {
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  &:hover {
+    border-color: var(--accent);
+    background: rgba(200,255,0,0.05);
+    transform: translateY(-3px);
+  }
+}
+
+/* Arrow SVG inside button */
+.btn .arrow {
+  display: inline-block;
+  transition: transform 0.4s var(--ease);
+}
+.btn:hover .arrow { transform: translateX(4px); }
+
+/* Hero ambient glow */
+.hero-glow {
+  position: absolute;
+  width: clamp(400px, 60vw, 900px);
+  height: clamp(400px, 60vw, 900px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,255,0,0.06) 0%, transparent 60%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: -1;
+  animation: glowPulse 8s ease-in-out infinite alternate;
+}
+@keyframes glowPulse {
+  0% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION 2 — THE BLOOM
+   ═══════════════════════════════════════════════════════════ */
+.bloom {
+  position: relative;
+  padding: 12rem 2rem;
+  z-index: 1;
+}
+.bloom-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.bloom-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: end;
+  margin-bottom: 6rem;
+}
+.bloom-number {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(6rem, 12vw, 12rem);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  color: var(--surface);
+  -webkit-text-stroke: 1px var(--border);
+}
+
+/* ═══ Liquid Glass Cards ═══ */
+.glass-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.glass-panel {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.6s var(--ease);
+  /* Liquid Glass layers */
+  & .panel-filter {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    backdrop-filter: blur(40px) saturate(1.6);
+    -webkit-backdrop-filter: blur(40px) saturate(1.6);
+    filter: url(#liquid-glass);
+    border-radius: inherit;
+  }
+  & .panel-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: rgba(255,255,255,0.035);
+    border-radius: inherit;
+    border: 1px solid var(--glass-border);
+  }
+  & .panel-specular {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgba(255,255,255,0.1) 0%,
+      transparent 40%,
+      transparent 60%,
+      rgba(255,255,255,0.03) 100%
+    );
+    pointer-events: none;
+  }
+  & .panel-content {
+    position: relative;
+    z-index: 4;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-height: 320px;
+    justify-content: flex-end;
+  }
+  &:hover {
+    transform: translateY(-8px);
+    & .panel-overlay {
+      border-color: rgba(200,255,0,0.15);
+      box-shadow: 0 0 60px rgba(200,255,0,0.05);
+    }
+  }
+}
+.panel-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+.panel-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.panel-desc {
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.panel-stat {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GIANT TEXT MARQUEE
+   ═══════════════════════════════════════════════════════════ */
+.marquee-wrap {
+  overflow: hidden;
+  padding: 4rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+}
+.marquee-track {
+  display: flex;
+  gap: 0.5em;
+  white-space: nowrap;
+  animation: marqueeScroll 20s linear infinite;
+  width: max-content;
+}
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track span {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(3rem, 8vw, 8rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--border-hover);
+  transition: color 0.3s, -webkit-text-stroke 0.3s;
+  padding: 0 0.3em;
+}
+.marquee-track span:nth-child(odd) {
+  -webkit-text-stroke-color: var(--text-tertiary);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SECTION 3 — THE ECHO
+   ═══════════════════════════════════════════════════════════ */
+.echo {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10rem 2rem;
+  z-index: 1;
+  text-align: center;
+}
+.echo-glow {
+  position: absolute;
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,61,113,0.08) 0%, transparent 60%);
+  top: 30%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: -1;
+}
+.echo-timestamp {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent-3);
+  padding: 0.6rem 1.5rem;
+  border: 1px solid rgba(255,61,113,0.2);
+  border-radius: 100px;
+  margin-bottom: 3rem;
+  animation: timestampGlow 3s ease-in-out infinite alternate;
+}
+@keyframes timestampGlow {
+  0% { box-shadow: 0 0 0 rgba(255,61,113,0); }
+  100% { box-shadow: 0 0 40px rgba(255,61,113,0.15); }
+}
+.echo-quote {
+  position: relative;
+  max-width: 700px;
+  margin: 3rem auto;
+  padding: 3rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px) saturate(1.6);
+  -webkit-backdrop-filter: blur(40px) saturate(1.6);
+  border: 1px solid rgba(255,61,113,0.1);
+  border-radius: var(--radius-lg);
+  /* Top glow line */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-3), transparent);
+    opacity: 0.6;
+  }
+  & .quote-text {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(1.5rem, 3vw, 2.4rem);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.45;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+  }
+  & .quote-attr {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+}
+
+/* Expanding pulse rings */
+.echo-rings {
+  position: absolute;
+  top: 25%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px; height: 500px;
+  pointer-events: none;
+  z-index: -1;
+}
+.echo-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  border-radius: 50%;
+  border: 1px solid rgba(255,61,113,0.08);
+  animation: echoExpand 5s ease-out infinite;
+}
+.echo-ring:nth-child(1) { animation-delay: 0s; }
+.echo-ring:nth-child(2) { animation-delay: 1.25s; }
+.echo-ring:nth-child(3) { animation-delay: 2.5s; }
+.echo-ring:nth-child(4) { animation-delay: 3.75s; }
+@keyframes echoExpand {
+  0% { width: 10px; height: 10px; margin: -5px 0 0 -5px; opacity: 0.8; }
+  100% { width: 500px; height: 500px; margin: -250px 0 0 -250px; opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════ */
+.footer {
+  position: relative;
+  z-index: 1;
+  padding: 4rem 2rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .bloom-header { grid-template-columns: 1fr; gap: 2rem; }
+  .glass-grid { grid-template-columns: 1fr; }
+  .nav { display: none; }
+  .cursor, .cursor-dot { display: none; }
+  body { cursor: auto; }
+  button, a { cursor: pointer; }
+}
+@media (max-width: 480px) {
+  .hero-actions { flex-direction: column; width: 100%; }
+  .btn { justify-content: center; width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- SVG Liquid Glass Filter (Apple-style) -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <filter id="liquid-glass" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.012" numOctaves="1" seed="42" result="noise">
+      <animate attributeName="seed" from="1" to="100" dur="12s" repeatCount="indefinite"/>
+    </feTurbulence>
+    <feGaussianBlur in="noise" stdDeviation="3" result="softNoise"/>
+    <feSpecularLighting in="softNoise" surfaceScale="3" specularConstant="0.7" specularExponent="80" lighting-color="white" result="specLight">
+      <fePointLight x="-100" y="-200" z="300"/>
+    </feSpecularLighting>
+    <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="lit"/>
+    <feDisplacementMap in="SourceGraphic" in2="softNoise" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<!-- Custom Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- Scroll Progress -->
+<div class="scroll-progress"><div class="bar"></div></div>
+
+<!-- Grain -->
+<div class="grain"></div>
+
+<!-- Particle Canvas -->
+<canvas id="particleCanvas"></canvas>
+
+<!-- Loading Screen -->
+<div class="loader" id="loader">
+  <div class="loader-counter" id="loaderCount">0</div>
+  <div class="loader-line"><div class="loader-line-fill" id="loaderFill"></div></div>
+  <div class="loader-label">Folding Spacetime</div>
+</div>
+
+<!-- Navigation -->
+<nav class="nav" id="nav">
+  <a href="#void" class="active" data-section="void">The Void</a>
+  <a href="#bloom" data-section="bloom">The Bloom</a>
+  <a href="#echo" data-section="echo">The Echo</a>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ACT I — THE VOID
+     ═══════════════════════════════════════════════════════ -->
+<section class="hero" id="void">
+  <div class="hero-glow"></div>
+
+  <div class="hero-badge" id="heroBadge">
+    <div class="dot"></div>
+    <span>Intercepted · 2089 CE</span>
+  </div>
+
+  <h1 class="hero-title display-xxl" id="heroTitle">
+    <span class="line">Chro</span>
+    <span class="line"><span class="accent-text">nos</span></span>
+  </h1>
+
+  <p class="hero-sub body-lg" id="heroSub">
+    In 2089, a physicist proved that time doesn't flow forward.
+    It radiates outward from a single point of observation.
+    That point is here. That observer is you.
+  </p>
+
+  <div class="hero-actions" id="heroActions">
+    <a href="#bloom" class="btn btn-fill">
+      Enter the Paradox
+      <span class="arrow">→</span>
+    </a>
+    <a href="#echo" class="btn btn-outline">
+      Skip to Revelation
+    </a>
+  </div>
+</section>
+
+
+<!-- Marquee -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>Time</span><span>·</span>
+    <span>Entropy</span><span>·</span>
+    <span>Consciousness</span><span>·</span>
+    <span>Collapse</span><span>·</span>
+    <span>Observer</span><span>·</span>
+    <span>Paradox</span><span>·</span>
+    <span>Time</span><span>·</span>
+    <span>Entropy</span><span>·</span>
+    <span>Consciousness</span><span>·</span>
+    <span>Collapse</span><span>·</span>
+    <span>Observer</span><span>·</span>
+    <span>Paradox</span><span>·</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ACT II — THE BLOOM
+     ═══════════════════════════════════════════════════════ -->
+<section class="bloom" id="bloom">
+  <div class="bloom-inner">
+
+    <div class="bloom-header reveal">
+      <div>
+        <div class="mono-sm" style="color: var(--accent); margin-bottom: 1.5rem;">Act II — The Bloom</div>
+        <h2 class="display-xl">What if the<br>universe is<br><span style="color:var(--accent-2)">watching?</span></h2>
+      </div>
+      <div>
+        <p class="body-lg">
+          Dr. Lena Vasquez's equations showed that the arrow of time
+          is not a law of physics. It is a consequence of measurement.
+          Every conscious observation collapses infinite futures into one past.
+          You are not moving through time. Time is being created by you.
+        </p>
+      </div>
+    </div>
+
+    <div class="glass-grid">
+      <div class="glass-panel reveal-scale" style="animation-delay: 0s">
+        <div class="panel-filter"></div>
+        <div class="panel-overlay"></div>
+        <div class="panel-specular"></div>
+        <div class="panel-content">
+          <div class="panel-icon">◎</div>
+          <div class="panel-stat">Observation 001</div>
+          <div class="panel-title">The Vasquez Field</div>
+          <div class="panel-desc">A measurable radius around every conscious being where quantum decoherence is 10,000x more likely. Reality solidifies near observers.</div>
+        </div>
+      </div>
+      <div class="glass-panel reveal-scale" style="animation-delay: 0.1s">
+        <div class="panel-filter"></div>
+        <div class="panel-overlay"></div>
+        <div class="panel-specular"></div>
+        <div class="panel-content">
+          <div class="panel-icon">⬡</div>
+          <div class="panel-stat">Observation 002</div>
+          <div class="panel-title">Temporal Foam</div>
+          <div class="panel-desc">Between observations, time does not exist in any measurable form. The gaps between your thoughts are literal gaps in spacetime.</div>
+        </div>
+      </div>
+      <div class="glass-panel reveal-scale" style="animation-delay: 0.2s">
+        <div class="panel-filter"></div>
+        <div class="panel-overlay"></div>
+        <div class="panel-specular"></div>
+        <div class="panel-content">
+          <div class="panel-icon">◈</div>
+          <div class="panel-stat">Observation 003</div>
+          <div class="panel-title">The Echo Problem</div>
+          <div class="panel-desc">If observation creates time, what created the first observer? The answer broke mathematics. The observer was always there.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Marquee 2 -->
+<div class="marquee-wrap">
+  <div class="marquee-track" style="animation-direction: reverse;">
+    <span>You</span><span>·</span>
+    <span>Are</span><span>·</span>
+    <span>The</span><span>·</span>
+    <span>Variable</span><span>·</span>
+    <span>You</span><span>·</span>
+    <span>Are</span><span>·</span>
+    <span>The</span><span>·</span>
+    <span>Variable</span><span>·</span>
+    <span>You</span><span>·</span>
+    <span>Are</span><span>·</span>
+    <span>The</span><span>·</span>
+    <span>Variable</span><span>·</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ACT III — THE ECHO
+     ═══════════════════════════════════════════════════════ -->
+<section class="echo" id="echo">
+  <div class="echo-glow"></div>
+  <div class="echo-rings">
+    <div class="echo-ring"></div>
+    <div class="echo-ring"></div>
+    <div class="echo-ring"></div>
+    <div class="echo-ring"></div>
+  </div>
+
+  <div class="reveal" style="max-width: 800px;">
+    <div class="mono-sm" style="color: var(--accent-3); margin-bottom: 1.5rem;">Act III — The Echo</div>
+    <h2 class="display-xl" style="margin-bottom: 2rem;">The universe<br>just noticed<br><span style="color:var(--accent-3)">you.</span></h2>
+    <p class="body-lg" style="margin: 0 auto 2rem; text-align: center;">
+      On September 3rd, 2089, the LIGO array detected a gravitational wave
+      unlike any before. It was not from a collision. It was a response.
+      The waveform, when decoded, contained a single data point:
+    </p>
+  </div>
+
+  <div class="reveal" style="margin-bottom: 2rem;">
+    <div class="echo-timestamp" id="timestamp">
+      <span id="liveTime"></span>
+    </div>
+  </div>
+
+  <div class="reveal">
+    <p class="body-lg" style="margin: 0 auto 2rem; text-align: center;">
+      Your exact time. Right now. The moment you read this sentence.
+      The universe encoded your current timestamp into a gravitational wave
+      and sent it backward through 13.8 billion years of spacetime
+      to arrive at a detector in Louisiana at the precise moment you scrolled here.
+    </p>
+  </div>
+
+  <div class="echo-quote reveal-scale">
+    <div class="quote-text">
+      "The experiment was never designed to observe the universe.
+      The universe designed the experiment to observe itself.
+      Through you. At this exact moment."
+    </div>
+    <div class="quote-attr">— Dr. Lena Vasquez · Final journal entry · September 4, 2089</div>
+  </div>
+
+  <div class="reveal" style="margin-top: 4rem;">
+    <a href="#void" class="btn btn-fill" style="--accent: var(--accent-3); background: var(--accent-3); box-shadow: 0 0 30px rgba(255,61,113,0.25);">
+      Loop the Paradox
+      <span class="arrow">↻</span>
+    </a>
+  </div>
+</section>
+
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="mono-sm" style="color: var(--text-tertiary);">
+    Classification Ω-7 · Eyes Only · The observer has been observed · End transmission
+  </div>
+</footer>
+
+
+<script>
+// ═══════════════════════════════════════════════════════
+// LOADING SCREEN
+// ═══════════════════════════════════════════════════════
+const loader = document.getElementById('loader');
+const loaderCount = document.getElementById('loaderCount');
+const loaderFill = document.getElementById('loaderFill');
+let count = 0;
+const loadInterval = setInterval(() => {
+  count += Math.floor(Math.random() * 4) + 1;
+  if (count > 100) count = 100;
+  loaderCount.textContent = count;
+  loaderFill.style.width = count + '%';
+  if (count === 100) {
+    clearInterval(loadInterval);
+    setTimeout(() => {
+      loader.classList.add('hidden');
+      triggerHeroAnimations();
+    }, 400);
+  }
+}, 40);
+
+function triggerHeroAnimations() {
+  setTimeout(() => document.getElementById('heroBadge').classList.add('show'), 200);
+  document.querySelectorAll('.hero-title .line').forEach((el, i) => {
+    setTimeout(() => el.classList.add('show'), 400 + i * 150);
+  });
+  setTimeout(() => document.getElementById('heroSub').classList.add('show'), 700);
+  setTimeout(() => document.getElementById('heroActions').classList.add('show'), 900);
+  setTimeout(() => document.getElementById('nav').classList.add('visible'), 1100);
+}
+
+// ═══════════════════════════════════════════════════════
+// PARTICLE SYSTEM (Canvas)
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let mouse = { x: -1000, y: -1000 };
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 1.5 + 0.3;
+    this.speedX = (Math.random() - 0.5) * 0.15;
+    this.speedY = (Math.random() - 0.5) * 0.15;
+    this.opacity = Math.random() * 0.5 + 0.1;
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    // Mouse influence
+    const dx = mouse.x - this.x;
+    const dy = mouse.y - this.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 200) {
+      const force = (200 - dist) / 200;
+      this.x -= dx * force * 0.008;
+      this.y -= dy * force * 0.008;
+    }
+    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(240,239,233,${this.opacity})`;
+    ctx.fill();
+  }
+}
+
+const particleCount = Math.min(Math.floor(window.innerWidth * 0.12), 150);
+for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+
+function drawLines() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(200,255,0,${0.03 * (1 - dist/120)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  drawLines();
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ═══════════════════════════════════════════════════════
+// CUSTOM CURSOR
+// ═══════════════════════════════════════════════════════
+const cursor = document.getElementById('cursor');
+const cursorDot = document.getElementById('cursorDot');
+let cx = 0, cy = 0, dx = 0, dy = 0;
+
+document.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  dx = e.clientX;
+  dy = e.clientY;
+  cursorDot.style.left = e.clientX + 'px';
+  cursorDot.style.top = e.clientY + 'px';
+});
+
+function animateCursor() {
+  cx += (dx - cx) * 0.12;
+  cy += (dy - cy) * 0.12;
+  cursor.style.left = cx + 'px';
+  cursor.style.top = cy + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// Hover effects
+document.querySelectorAll('a, button, .glass-panel').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+});
+
+// ═══════════════════════════════════════════════════════
+// NAV ACTIVE STATE
+// ═══════════════════════════════════════════════════════
+const sections = document.querySelectorAll('section');
+const navLinks = document.querySelectorAll('.nav a');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.dataset.section === entry.target.id);
+      });
+    }
+  });
+}, { threshold: 0.3 });
+sections.forEach(s => obs.observe(s));
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// LIVE TIMESTAMP (Act III)
+// ═══════════════════════════════════════════════════════
+function updateTime() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  const ms = String(now.getMilliseconds()).padStart(3,'0');
+  const el = document.getElementById('liveTime');
+  if (el) el.textContent = `${now.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}).toUpperCase()} · ${h}:${m}:${s}:${ms}`;
+  requestAnimationFrame(updateTime);
+}
+updateTime();
+</script>
+
+</body>
+</html>
